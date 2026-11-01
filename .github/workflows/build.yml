@@ -11,6 +11,13 @@ jobs:
         with:
           ref: a37c81e231c0a73e743bb14dc55af2ceea4fab9d
 
+      - name: Exclude unused OCR file from vcxproj (dead code in v1.02; tesseract not installed)
+        shell: pwsh
+        run: |
+          $p = 'flyff_combat_bot\flyff_combat_bot.vcxproj'
+          (Get-Content $p) | Where-Object { $_ -notmatch 'ClCompile Include="ocr_matching.cpp"' } | Set-Content $p
+          if (Select-String -Path $p -Pattern 'ocr_matching.cpp' -Quiet) { throw 'patch failed' }
+
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
 
