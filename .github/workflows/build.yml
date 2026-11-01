@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: windows-2022
     steps:
-      - name: Checkout source (tag v1.02, pinned commit)
+      - name: Checkout source (tag v1.02, pinned commit; window-title fix applied in later step)
         uses: actions/checkout@v4
         with:
           ref: a37c81e231c0a73e743bb14dc55af2ceea4fab9d
@@ -17,6 +17,28 @@ jobs:
           $p = 'flyff_combat_bot\flyff_combat_bot.vcxproj'
           (Get-Content $p) | Where-Object { $_ -notmatch 'ClCompile Include="ocr_matching.cpp"' } | Set-Content $p
           if (Select-String -Path $p -Pattern 'ocr_matching.cpp' -Quiet) { throw 'patch failed' }
+
+      - name: Apply window-title detection fix (full files from branch window-title-fix, commit 1e04b30)
+        shell: pwsh
+        run: |
+          $base = 'https://raw.githubusercontent.com/gardenofeden26/flyff_combat_bot/window-title-fix/flyff_combat_bot'
+          $map = [ordered]@{
+            '1-game_window.cpp' = 'game_window.cpp'
+            '2-game_window.h' = 'game_window.h'
+            '3-memory_reader.cpp' = 'memory_reader.cpp'
+            '4-mouse_and_keyboard.cpp' = 'mouse_and_keyboard.cpp'
+            '5-main.cpp' = 'main.cpp'
+            '6-map_image_matching.cpp' = 'map_image_matching.cpp'
+            '7-debug_image_matching.cpp' = 'debug_image_matching.cpp'
+            '8-image_matching.cpp' = 'image_matching.cpp'
+          }
+          foreach ($k in $map.Keys) {
+            Invoke-WebRequest -Uri "$base/$k" -OutFile "flyff_combat_bot\$($map[$k])"
+          }
+          $newHits = (Get-ChildItem 'flyff_combat_bot\*.cpp','flyff_combat_bot\*.h' | Select-String -Pattern 'find_flyff_window').Count
+          if ($newHits -lt 20) { throw "window-title fix not applied, only $newHits find_flyff_window references" }
+          $oldHits = (Get-ChildItem 'flyff_combat_bot\*.cpp' | Select-String -Pattern 'FindWindowW\(NULL, L\"Flyff Universe').Count
+          if ($oldHits -gt 0) { throw "old exact-title lookups remain: $oldHits" }
 
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
