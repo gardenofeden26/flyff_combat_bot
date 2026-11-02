@@ -18,14 +18,14 @@ jobs:
           (Get-Content $p) | Where-Object { $_ -notmatch 'ClCompile Include="ocr_matching.cpp"' } | Set-Content $p
           if (Select-String -Path $p -Pattern 'ocr_matching.cpp' -Quiet) { throw 'patch failed' }
 
-      - name: Apply window-title + diagnostic patch (files from branch window-title-fix, pinned commit 7ba4e4a)
+      - name: Apply window-title + diagnostic patch (files from branch window-title-fix, pinned commit 6385941)
         shell: pwsh
         run: |
-          $base = 'https://raw.githubusercontent.com/gardenofeden26/flyff_combat_bot/7ba4e4a03f053c5195ee78bed48922430912d573/flyff_combat_bot'
+          $base = 'https://raw.githubusercontent.com/gardenofeden26/flyff_combat_bot/6385941900eb9c5149aaa9093b169216fe8ef4ca/flyff_combat_bot'
           $map = [ordered]@{
             '1-game_window.cpp' = 'game_window.cpp'
             '2-game_window.h' = 'game_window.h'
-            '1-diag1-memory_reader.cpp' = 'memory_reader.cpp'
+            '1-diag2-memory_reader.cpp' = 'memory_reader.cpp'
             '4-mouse_and_keyboard.cpp' = 'mouse_and_keyboard.cpp'
             '2-diag5-main.cpp' = 'main.cpp'
             '6-map_image_matching.cpp' = 'map_image_matching.cpp'
@@ -43,8 +43,8 @@ jobs:
           if ($diagHits -lt 2) { throw "diagnostic patch not applied, only $diagHits DIAG_BUILD_ANGLE_SCAN_V1 markers" }
           $oldErrHits = (Select-String -Path 'flyff_combat_bot\memory_reader.cpp' -Pattern 'Unable to assign check_bytes_after_angle').Count
           if ($oldErrHits -gt 0) { throw "old misleading angle error still present: $oldErrHits" }
-          $candHits = (Select-String -Path 'flyff_combat_bot\memory_reader.cpp' -Pattern 'DIAG_CANDIDATE_FINDER_V1').Count
-          if ($candHits -lt 2) { throw "candidate-finder patch not applied, only $candHits DIAG_CANDIDATE_FINDER_V1 markers" }
+          $candHits = (Select-String -Path 'flyff_combat_bot\memory_reader.cpp' -Pattern 'DIAG_CANDIDATE_FINDER_V2').Count
+          if ($candHits -lt 2) { throw "candidate-finder patch not applied, only $candHits DIAG_CANDIDATE_FINDER_V2 markers" }
           $candMain = (Select-String -Path 'flyff_combat_bot\main.cpp' -Pattern 'run_candidate_finder').Count
           if ($candMain -lt 1) { throw "candidate-finder entry hook missing in main.cpp" }
 
@@ -86,5 +86,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flyff_combat_bot_candidate_finder_readonly
+          name: flyff_combat_bot_candidate_finder_v2_readonly
           path: package\
