@@ -18,10 +18,10 @@ jobs:
           (Get-Content $p) | Where-Object { $_ -notmatch 'ClCompile Include="ocr_matching.cpp"' } | Set-Content $p
           if (Select-String -Path $p -Pattern 'ocr_matching.cpp' -Quiet) { throw 'patch failed' }
 
-      - name: Apply window-title detection fix (full files from branch window-title-fix, commit 1e04b30)
+      - name: Apply window-title detection fix (full files from branch window-title-fix, pinned commit 1e04b30)
         shell: pwsh
         run: |
-          $base = 'https://raw.githubusercontent.com/gardenofeden26/flyff_combat_bot/window-title-fix/flyff_combat_bot'
+          $base = 'https://raw.githubusercontent.com/gardenofeden26/flyff_combat_bot/1e04b30beb0cf5efa30d16e4aea4398464503dbb/flyff_combat_bot'
           $map = [ordered]@{
             '1-game_window.cpp' = 'game_window.cpp'
             '2-game_window.h' = 'game_window.h'
